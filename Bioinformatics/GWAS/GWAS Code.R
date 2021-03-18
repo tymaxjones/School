@@ -67,10 +67,31 @@ venn.diagram(
 filter <- CeliacSNP[CeliacSNP %in% EczemaSNP]
 
 
-GWAS_Celiac[GWAS_Celiac$ID %in% filter, c("ID", "allele")]
-GWAS_Crohns[GWAS_Crohns$ID %in% filter, c("ID", "allele")]
-GWAS_Eczema[GWAS_Eczema$ID %in% filter, c("ID", "allele")]
+tbl_ce <- GWAS_Celiac[GWAS_Celiac$ID %in% filter, c("ID", "allele", "P-value")]
+tbl_c <- GWAS_Crohns[GWAS_Crohns$ID %in% filter, c("ID", "allele", "P-value")]
+tbl_ad <- GWAS_Eczema[GWAS_Eczema$ID %in% filter, c("ID", "allele", "P-value")]
+
+ce_list <- c()
+c_list <- c()
+ad_list <- c()
+
+for (i in unique(tbl_ad$ID)) {
+ ce_alleles <- paste(unique(tbl_ce[tbl_ce$ID == i,2][[1]]), collapse = "")
+ c_alleles <- paste(unique(tbl_c[tbl_ce$ID == i,2][[1]]), collapse = "")
+ ad_alleles <- paste(unique(tbl_ad[tbl_ad$ID == i,2][[1]]), collapse = "")
+ 
+ ce_list <- append(ce_list, ce_alleles)
+ c_list <- append(c_list, c_alleles)
+ ad_list <- append(ad_list, ad_alleles)
+ 
+}
+
+ce_list
+c_list
+ad_list    
+SNP<- unique(tbl_ad$ID)
 
 
+#Data Frame for mix of CE C and AD SNPS
+data.frame(SNP, c_list, ce_list, ad_list)
 
-     
