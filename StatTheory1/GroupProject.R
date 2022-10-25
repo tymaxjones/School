@@ -6,7 +6,7 @@ bag <- c('t','t','t','p','p','p','f','f','f','g','g','g','g','g','e','e','e','e'
 # get all possible groups for group A
 groupA <- combn(bag,10)
 
-# This is bag - group A = group B
+# bag - group A = group B
 groupB <- apply(groupA, 2, function(x) vecsets::vsetdiff( bag, x ))
 
 # if you want to turn it into tables (not necessary)
