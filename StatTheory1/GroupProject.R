@@ -34,6 +34,7 @@ distance_metrics <- lapply(1:184756, get_distance_metric)
 
 # our primary distance metric is 0.3
 # make a plot showing values as extreme
+library(tidyverse)
 ggplot() +
   geom_histogram(aes(x = distance_metrics |> unlist(),
                      fill = distance_metrics |> unlist() |> abs() >= 0.3), 
