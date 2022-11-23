@@ -1,0 +1,101 @@
+---
+title: "Project 4"
+author: "Tyler Jones"
+date: "2022-11-22"
+output: word_document
+---
+# Background
+Sickle cell disease (SCD) is a group of genetic disorders in which red blood cells contort into a sickle shape. Symptoms of SCD include anemia (caused by misshapen cells dying early) as well as pain, infection, and stroke (caused by sickle cells blocking blood flow). There is some evidence that exposure to air pollution aggravates vaso-occlusion and pain in SCD patients. A hematologist at Duke wants to study the associations between various air pollutants and SCD in Durham County, North Carolina. She provides data on health system utilization (i.e., emergency department visits, hospitalizations, etc.) for SCD and you obtain air pollution data from the EPA. The pollutant data are raw measurements taken from the air pollution monitor at the RDU airport. This exposure data is messy and will need to be processed.
+
+# Project Components
+You have three .csv files containing daily air quality measurements for 2018-2020. Each file includes the date and concentrations of CO, PM2.5, and O3. Create a function to process the data. Run the function on the data in each .csv file. Your function should:
+
+- Rename the pollutant concentration columns with more appropriate variable names.
+- Format the date variable correctly.
+- Some days have multiple measurements for a single pollutant. For these days, calculate the daily average.
+- Remove any duplicate rows.
+- Some of the pollutants have measurement error issues. Loop through the pollutants and set any measured concentration that is negative to zero.
+- Create a table of the minimum and maximum of each pollutant.
+
+# Function
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(flextable)
+set_flextable_defaults(font.family = "cambria")
+
+get_tbl <- function(file){
+
+# load data
+dat <- read_csv(paste0("data/",files), 
+         col_types = cols(Date = col_date(format = "%m/%d/%Y"))) # Format date
+
+clean_dat <- dat |> 
+  rename(max.CO.conc = `Daily Max 8-hour CO Concentration`, # change col names
+         mean.PM2.conc = `Daily Mean PM2.5 Concentration`,
+         max.O3.conc = `Daily Max 8-hour Ozone Concentration`) |> 
+  group_by(Date) |> 
+  summarise(across(.cols = where(is.numeric), .fns = ~mean(.x, na.rm = T))) |> # average vals for same day 
+  ungroup() |> 
+  mutate(across(.cols = where(is.numeric), .fns = ~ifelse(.x < 0, 0 , .x)))  # if val < 0, make 0
+  
+
+
+table <- clean_dat |> 
+  pivot_longer(!Date, names_to = "pollutant", values_to = "conc") |> 
+  group_by(pollutant) |> 
+  summarise(Minimum = round(min(conc, na.rm = T), 3), Maximum = round(max(conc, na.rm = T),3)) |>  # Get max/min
+  ungroup() |> 
+  arrange(factor(pollutant, levels = c("max.CO.conc", "mean.PM2.conc", "max.O3.conc"))) |>  # order them right
+  mutate(pollutant = c("CO (ppm)", "PM2.5 (ug/m3)", "O3 (ppm)")) |>  # Clean names
+  flextable(cwidth = 1.2) |> 
+    set_caption(
+    as_paragraph(
+      as_chunk(paste0("Table ",which(files == file),": Daily Concentrations"), 
+               props = fp_text_default(italic = F))), 
+    word_stylename = "Table Caption") |> 
+  align_text_col(align = "left") |> 
+  align_nottext_col(align = "right") |> 
+  line_spacing(space = 0.5, part = "all") |> 
+  void(part = "head", j = 1)
+
+table
+
+}
+
+```
+
+
+# Apply Function
+
+
+```{r}
+files <- list.files("data/")
+
+tbls <- lapply(files, get_tbl)
+
+```
+
+
+\newpage
+
+# Tables
+
+**2018 Summary**
+
+```{r tab.cap='Table 1: Daily Concentrations',  tab.id='tab2', label='tab2' }
+tbls[[1]]
+```
+
+**2019 Summary**
+
+```{r tab.cap='Table 2: Daily Concentrations',  tab.id='tab3', label='tab3'}
+tbls[[2]]
+```
+
+
+**2020 Summary**
+
+```{r tab.cap='Table 3: Daily Concentrations',  tab.id='tab4', label='tab4'}
+tbls[[3]]
+```
